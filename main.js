@@ -1,42 +1,92 @@
-const displayArea = document.getElementById("display-area");
+const historyDisplay = document.getElementById("history");
+const currentDisplay = document.getElementById("current");
 const container = document.getElementById("container");
 
+let firstNumber = "";
+let operator = "";
+let secondNumber = "";
+let resultDisplayed = false;
+
 container.addEventListener("click", (e) => {
-  if (e.target.nodeName == "BUTTON") {
-    switch (e.target.textContent) {
-      case "AC":
-        clear();
-        break;
-      case "=":
-        evaluate();
-        break;
-      case "+/-":
-        positiveAndNegative();
-        break;
-      default:
-        addtodisplayArea(e.target.textContent);
-    }
+  if (e.target.nodeName !== "BUTTON") return;
+
+  const value = e.target.value;
+
+  if (!isNaN(value) || value === ".") {
+    if (value) handleNumber(value);
+  } else if (["+", "-", "*", "/"].includes(value)) {
+    handleOperator(value);
+  } else if (value === "=") {
+    calculate();
+  } else if (value === "AC") {
+    clear();
   }
 });
 
-function clear() {
-  displayArea.textContent = "";
-}
-
-function positiveAndNegative() {
-  displayArea.textContent = displayArea.textContent * -1;
-}
-
-function addtodisplayArea(value) {
-  displayArea.textContent = displayArea.textContent + value;
-}
-
-function evaluate() {
-  try {
-    let calculation = math.evaluate(displayArea.textContent);
-    displayArea.textContent = calculation;
-  } catch (error) {
-    displayArea.textContent = "Invalid Operation";
-    console.error(error);
+function handleNumber(value) {
+  if (resultDisplayed) {
+    clear();
   }
+  
+// If the operator is not set, we are still entering the first number
+  if (!operator) {
+    firstNumber += value;
+    currentDisplay.textContent = firstNumber;
+  } else {
+    secondNumber += value;
+    currentDisplay.textContent = secondNumber;
+  }
+}
+
+function handleOperator(op) {
+  if (!firstNumber) return;
+
+  if (secondNumber) {
+    calculate();
+    firstNumber = currentDisplay.textContent;
+    secondNumber = "";
+  }
+
+  operator = op;
+  historyDisplay.textContent = `${firstNumber} ${operator}`;
+  resultDisplayed = false;
+}
+
+function calculate() {
+  if (!firstNumber || !operator || !secondNumber) return;
+
+  const a = parseFloat(firstNumber);
+  const b = parseFloat(secondNumber);
+  let result = 0;
+
+  switch (operator) {
+    case "+":
+      result = a + b;
+      break;
+    case "-":
+      result = a - b;
+      break;
+    case "*":
+      result = a * b;
+      break;
+    case "/":
+      result = b === 0 ? "Error" : a / b;
+      break;
+  }
+
+  currentDisplay.textContent = result;
+  historyDisplay.textContent = `${firstNumber} ${operator} ${secondNumber} =`;
+  firstNumber = result.toString();
+  secondNumber = "";
+  operator = "";
+  resultDisplayed = true;
+}
+
+function clear() {
+  firstNumber = "";
+  secondNumber = "";
+  operator = "";
+  resultDisplayed = false;
+  currentDisplay.textContent = "";
+  historyDisplay.textContent = "";
 }
